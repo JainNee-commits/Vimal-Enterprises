@@ -133,23 +133,35 @@ nav.scrolled { box-shadow: 0 4px 28px rgba(0,0,0,.5) }
 .legacy-divider{width:1px;height:36px;background:var(--gold);opacity:.4}
 
 /* TRUST BAR */
-.trust-bar{background:var(--orange);padding:14px 5vw;display:flex;gap:2.5rem;align-items:center;justify-content:center;flex-wrap:wrap;overflow:hidden}
-.trust-item{color:#fff;font-size:.82rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px;white-space:nowrap}
-@media(max-width:600px){
-  .trust-bar{padding:12px 0;flex-wrap:nowrap;gap:0;justify-content:flex-start;overflow:hidden}
+.trust-bar{
+  background:var(--orange);
+  padding:12px 0;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  flex-wrap:nowrap;
+  gap:0;
+}
 .trust-ticker{
   display:flex;
   gap:3rem;
   padding:0 2rem;
-  animation:ticker 18s linear infinite;
   white-space:nowrap;
   flex-shrink:0;
+  min-width:100%;
+  animation:ticker 18s linear infinite;
 }
 @keyframes ticker{
   from{transform:translateX(0)}
   to{transform:translateX(-50%)}
 }
+.trust-item{
+  color:#fff;font-size:.82rem;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  display:inline-flex;align-items:center;
+  gap:8px;white-space:nowrap;
 }
+
 
 /* SECTIONS */
 section{padding:90px 5vw}
