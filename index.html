@@ -87,7 +87,7 @@ nav.scrolled { box-shadow: 0 4px 28px rgba(0,0,0,.5) }
 .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 
 /* MOBILE DRAWER */
-.mobile-drawer{position:fixed;top:var(--nav-h);left:0;right:0;background:var(--dark2);z-index:190;max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.22,1,.36,1)}
+.mobile-drawer{position:fixed;top:0;left:0;right:0;background:var(--dark2);z-index:190;max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.22,1,.36,1),top 0s}
 .mobile-drawer.open{max-height:360px}
 .mobile-drawer a{display:block;text-decoration:none;color:#D4C4AE;font-size:1.05rem;font-weight:500;padding:.8rem 5vw;border-bottom:1px solid rgba(255,255,255,.05);transition:color .2s,padding-left .2s}
 .mobile-drawer a:hover{color:var(--orange-light);padding-left:calc(5vw + 8px)}
@@ -340,6 +340,15 @@ footer{background:var(--dark);padding:2.5rem 5vw;border-top:3px solid var(--oran
     <li><a href="#contact">Contact</a></li>
   </ul>
 </nav>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="drawer">
+  <a class="dlink" href="#products">Products</a>
+  <a class="dlink" href="#brands">Brands</a>
+  <a class="dlink" href="#why">Why Us</a>
+  <a class="dlink" href="#about">About</a>
+  <a class="dlink" href="#contact">Contact</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -735,7 +744,17 @@ footer{background:var(--dark);padding:2.5rem 5vw;border-top:3px solid var(--oran
 <script>
 // Hamburger
 const burger=document.getElementById('burger'),drawer=document.getElementById('drawer');
-burger.addEventListener('click',()=>{burger.classList.toggle('open');drawer.classList.toggle('open')});
+
+function positionDrawer(){
+  const navEl=document.getElementById('topnav');
+  drawer.style.top=navEl.getBoundingClientRect().height+'px';
+}
+
+burger.addEventListener('click',()=>{
+  positionDrawer();
+  burger.classList.toggle('open');
+  drawer.classList.toggle('open');
+});
 document.querySelectorAll('.dlink').forEach(l=>l.addEventListener('click',()=>{burger.classList.remove('open');drawer.classList.remove('open')}));
 
 // Sticky nav shadow
