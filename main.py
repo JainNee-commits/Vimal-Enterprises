@@ -10,9 +10,9 @@ load_dotenv()
 
 client = OpenAI(
 
-    api_key=os.environ["CHATANYWHERE_API_KEY"],
+    api_key=os.environ["sk-6v2xnpTjHvbnk3R6Bg6eQmMMJJ0ivBwec8de6yohAOG28TSI"],
 
-    base_url=os.environ["BASE_URL"],
+    base_url=os.environ["https://api.chatanywhere.tech/v1"],
 
 )
 
