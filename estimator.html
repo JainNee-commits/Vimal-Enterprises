@@ -371,7 +371,34 @@ function analyse() {
     '{"observation":"2-3 sentences about this project","confidence":75,"elements":[{"name":"RCC Columns","qty":"12 nos","dimensions":"230x300mm H=3m","steel_kg":485.5,"cement_bags":38.2,"note":"6 bars 16mm dia"},{"name":"RCC Roof Slab","qty":"1 no","dimensions":"110 sqm 125mm thick","steel_kg":1072.0,"cement_bags":220.5,"note":"1% steel M25"}],"total_steel_kg":3240.5,"total_cement_bags":648.0,"assumptions":"assumptions made","engineer_note":"key thing to verify"}'
   ].join('\n');
 
-  fetch('https://api.chatanywhere.org/v1/chat/completions', {
+  var ENDPOINTS = [
+    'https://api.chatanywhere.org/v1/chat/completions',
+    'https://api.chatanywhere.tech/v1/chat/completions',
+    'https://api.chatanywhere.cn/v1/chat/completions'
+  ];
+
+  function tryFetch(endpointIndex) {
+    if (endpointIndex >= ENDPOINTS.length) {
+      stopLoader();
+      document.getElementById('loader').classList.remove('show');
+      document.getElementById('analyse-btn').disabled = false;
+      var eb = document.getElementById('error-box');
+      eb.innerHTML = '<strong>All endpoints failed (CORS/network error).</strong>'
+        + '<br><br>This happens when the HTML file is opened directly from your desktop (file://).'
+        + '<br><br><strong>Fix: Host the file on a simple local server:</strong>'
+        + '<ol style="margin:.5rem 0 0 1.2rem;line-height:2">'
+        + '<li>Open Command Prompt / Terminal in the folder where estimator.html is saved</li>'
+        + '<li>Run: <code style="background:#f0e0d0;padding:2px 6px;border-radius:3px">python -m http.server 8080</code></li>'
+        + '<li>Open Chrome and go to: <code style="background:#f0e0d0;padding:2px 6px;border-radius:3px">http://localhost:8080/estimator.html</code></li>'
+        + '</ol>'
+        + '<br>Or upload both files to your website hosting and open from there.';
+      eb.classList.add('show');
+      return;
+    }
+
+    document.getElementById('loader-step').textContent = 'Trying server ' + (endpointIndex + 1) + ' of ' + ENDPOINTS.length + '...';
+
+    fetch(ENDPOINTS[endpointIndex], {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -390,7 +417,7 @@ function analyse() {
     return resp.json().then(function(data) {
       if (!resp.ok) {
         var msg = (data && data.error && data.error.message) ? data.error.message : 'API error ' + resp.status;
-        throw new Error('OpenAI API Error (' + resp.status + '): ' + msg);
+        throw new Error('API Error (' + resp.status + '): ' + msg);
       }
       return data;
     });
@@ -399,37 +426,41 @@ function analyse() {
     stopLoader();
     document.getElementById('loader').classList.remove('show');
     document.getElementById('analyse-btn').disabled = false;
-
     if (!data.choices || !data.choices[0]) {
-      throw new Error('No response from OpenAI. Full response: ' + JSON.stringify(data).slice(0, 300));
+      throw new Error('No response returned. Got: ' + JSON.stringify(data).slice(0, 200));
     }
-
     var raw = data.choices[0].message.content.trim();
-    raw = raw.replace(/^```[a-z]*\s*/i, '').replace(/```\s*$/i, '').trim();
-
+    raw = raw.replace(/^```[a-z]*/i, '').replace(/```$/i, '').trim();
     var result;
-    try {
-      result = JSON.parse(raw);
-    } catch (e) {
-      throw new Error('AI returned unexpected format. Raw response: ' + raw.slice(0, 300));
-    }
+    try { result = JSON.parse(raw); }
+    catch (e) { throw new Error('AI returned unexpected format: ' + raw.slice(0, 200)); }
     renderResults(result);
   })
   .catch(function(err) {
-    stopLoader();
-    document.getElementById('loader').classList.remove('show');
-    document.getElementById('analyse-btn').disabled = false;
-    var eb = document.getElementById('error-box');
-    var isNetworkErr = err.message.toLowerCase().indexOf('fetch') !== -1 || err.message.toLowerCase().indexOf('network') !== -1;
-    eb.innerHTML = '<strong>Error:</strong> ' + err.message
-      + (isNetworkErr ? '<br><br><strong style="color:var(--orange)">This looks like a network/CORS error.</strong> The proxy server may be temporarily blocking browser requests. Please try again in a minute - the server auto-recovers.' : '')
-      + '<br><br><strong>Common fixes:</strong><ul style="margin:.5rem 0 0 1.2rem;line-height:1.8">'
-      + '<li>Wait 30 seconds and click Analyse again - the proxy recovers quickly</li>'
-      + '<li>Check proxy status at <a href="https://status.chatanywhere.tech" target="_blank" style="color:var(--orange)">status.chatanywhere.tech</a></li>'
-      + '<li>Make sure your API key is correct</li>'
-      + '</ul>';
-    eb.classList.add('show');
+    var isNetwork = err.message === 'Failed to fetch' || err.message.toLowerCase().indexOf('network') !== -1 || err.message.toLowerCase().indexOf('cors') !== -1;
+    if (isNetwork && endpointIndex + 1 < ENDPOINTS.length) {
+      tryFetch(endpointIndex + 1);
+    } else {
+      stopLoader();
+      document.getElementById('loader').classList.remove('show');
+      document.getElementById('analyse-btn').disabled = false;
+      var eb = document.getElementById('error-box');
+      if (isNetwork) {
+        eb.innerHTML = '<strong>Network Error - All servers unreachable.</strong>'
+          + '<br><br>This happens when the HTML file is opened directly from desktop (file://).'
+          + '<br><br><strong>Quick fix - run this in Command Prompt:</strong>'
+          + '<br><code style="display:block;background:#1A1208;color:#F0997B;padding:10px;border-radius:5px;margin:.5rem 0;font-size:.85rem">python -m http.server 8080</code>'
+          + 'Then open: <a href="http://localhost:8080/estimator.html" style="color:var(--orange)">http://localhost:8080/estimator.html</a>'
+          + '<br><br>Or upload the file to your website and use it from there.';
+      } else {
+        eb.innerHTML = '<strong>Error:</strong> ' + err.message;
+      }
+      eb.classList.add('show');
+    }
   });
+  }
+
+  tryFetch(0);
 }
 
 function renderResults(r) {
